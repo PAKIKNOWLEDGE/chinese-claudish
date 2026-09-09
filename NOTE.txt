@@ -1,0 +1,66 @@
+claudish-zh 素材包 — 从 programasweights/claudish 挖的材料
+
+目录:
+  specs/english-to-claudish.md    放大方向 spec（英文→claudish）。这就是 PAW 程序的
+                                  全部内容——整个 spec 文本就是程序的"权重"，原样喂给
+                                  模型跑。中文版的核心就是它。
+  specs/claudish-to-english.md    反向 spec（claudish→英文）。做词典/验证时有用。
+  dictionary/entries.json         词典（schema_version 2: 30 词条 / 7 实语料标本 /
+                                  5 来源 / 3 句式模式 / 4 分类）。
+  dictionary/validate.py          词典字段契约（REQUIRED_*_FIELDS 就是 schema）。
+
+====================================================================
+英文 spec 的骨架（中文版必须原样保留的部分）
+====================================================================
+1. 任务定位: 是"改写input成claudish"，不是"回应input"。可substantially改措辞/句式，
+   但事实/意图/确定性/隐含含义必须保留。
+2. 硬约束: 不得新增事实、解释、建议、因果主张、隐含结论。output里每个想法必须能从
+   input恢复。长度与input大致相当；短input一句。只输出改写文本，不附加评论。
+3. 可见改写: 至少改以下两个维度——句式/框架/从句顺序/抽象层级/修辞对比/特征词汇/节奏。
+4. 七种技法(放大现象的工具箱):
+   - 对比式重构: "X, not Y" / "not X but Y" / "less X than Y"
+   - 结构式框架: 边界/层/接缝/门/交接/表面/脚手架/布线 等系统隐喻
+   - 流程式词汇: gate/blocker/guard/verified/canonical/stale/drift/surfaced/landed/
+     parity/probe/triage/calibration/provenance/lineage
+   - 压缩成抽象名词(不改变含义)
+   - 排比: 平衡从句/镜像句法/分号
+   - 强调式框架: 把关键区分/约束/失败点放到台前
+   - Claude式节奏: 工整释句 + 短促锐句
+5. 高信号词表: load-bearing/spine/shape/grain/verdict/audited/gating/quality-gated/
+   owner-gated/approval-gated/cleanly/hard gate/hard constraint/hard boundary/
+   hard stop/routing/routing layer/context router —— 只在input确实含有对应关系时用。
+6. 学术腔词表: frontier/horizon/floor/surface/exchange rate/regime/trajectory/
+   slice/cell/matched/frozen/headline/confirmatory/protocol/claim gate/lower bound/
+   clears/survives/implicates。
+7. X-复合词模式: X-gated / X-backed / X-side / X-level / X-first / X-safe /
+   X-matched / X-layer / X-surface / X-path / X-boundary。X和关系都必须来自input，
+   不得为造词而发明参与者/阶段/指标。
+8. 核心原则: 修辞改写 > 关键词替换。结果要像Claude自然说出，不是往原文里插词。
+
+反向spec(c→e)是同构的: 语义压缩(重复命题折叠成最短句)、降到最低抽象层级、删
+元修辞结构(不只改写)、解码结构隐喻(X-gated→"X required/restricted/must happen
+first"式翻译表)、逻辑范围精确(不放大: "Do X if Y"≠"X仅当Y"、"required"≠"sufficient"
+等陷阱清单)、名词堆叠拆成从句、规范化学术腔、但真正的技术术语保留。
+
+====================================================================
+中文版需要自己造的部分（英文材料给不了你）
+====================================================================
+- 中文版"高信号词表": load-bearing/landed/surfaced/gated 的汉语对应（如 承载/落地/
+  浮出/门控 之类，得你自己定，要选模型天然爱用的高频词）
+- 中文版"研究腔词表": 前沿/水平/下限/协议/轨迹 之类
+- 中文版 X-复合模式: "X-门控/X-级/X-侧/X-路径" 之类能否在中文成立、以及中文特有的
+  复合形态（"以X为锚"、"X本位"……）
+- 中文 reassure 分类（"不会破坏既有行为""这是安全的"式的安抚句式）
+- 中文 construction 分类（对仗/排比/反问/设问收尾 等句式特征）
+- 中文语料标本 + 来源管理：词典的 specimens 字段指向公开、明示是模型输出的文本
+
+词典 schema 直接用（字段名不变，内容换中文）:
+  entry:    slug, term, plain_english, explanation, category, aliases, example{claudish,english}
+  specimen: id, quote, translation, note, source_id
+  source:   id, title, url, kind, note
+  phrase_guide: id, pattern, plain_english, explanation, examples
+  分类固定4类: word / phrase / reassurance / construction
+  validate.py 收紧: slug 须 ^[a-z0-9]+(-[a-z0-9]+)*$（中文slug建议改规则）
+
+运行时: 原项目用 programasweights(pip包) 把 spec 文本当程序跑，一行 translate.py 搞定；
+中文版可照抄这个模式，或把 spec 当普通 system prompt 喂给任何 LLM——spec 不依赖 PAW。
