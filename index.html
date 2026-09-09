@@ -179,6 +179,12 @@
         <div class="field"><label>Max Tokens</label><input id="cfgMaxTokens" type="number" step="1" min="1"></div>
       </div>
       <div class="field">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+          <input type="checkbox" id="cfgNoThink" style="width:auto">
+          关闭模型思考（reasoning_effort: none）—— 带推理的模型会先想后答，卡半天；勾上直接答。部分端点/模型不认此字段，报错就取消勾选。
+        </label>
+      </div>
+      <div class="field">
         <label>系统提示词 <button class="btn plain" id="restorePrompt" title="恢复 prompt.js 里的蒸馏默认提示词" style="padding:0;font-size:12px">恢复默认</button></label>
         <textarea id="cfgPrompt" rows="10" spellcheck="false"></textarea>
       </div>
@@ -207,6 +213,7 @@
     model: "gpt-4o-mini",
     temperature: 0.7,
     maxTokens: 2000,
+    noThink: false,
     prompt: window.CLAUDISH_ZH_PROMPT || ""
   };
 
@@ -243,6 +250,7 @@
     settings.model = $("cfgModel").value.trim();
     settings.temperature = parseFloat($("cfgTemp").value);
     settings.maxTokens = parseInt($("cfgMaxTokens").value, 10);
+    settings.noThink = $("cfgNoThink").checked;
     settings.prompt = $("cfgPrompt").value;
     saveSettings(settings);
     closeSettings();
@@ -328,6 +336,7 @@
     $("cfgModel").value = settings.model;
     $("cfgTemp").value = settings.temperature;
     $("cfgMaxTokens").value = settings.maxTokens;
+    $("cfgNoThink").checked = !!settings.noThink;
     $("cfgPrompt").value = settings.prompt;
     $("settingsOverlay").classList.add("show");
   }
@@ -362,15 +371,19 @@
         "Content-Type": "application/json",
         "Authorization": "Bearer " + settings.apiKey
       },
-      body: JSON.stringify({
-        model: settings.model,
-        temperature: settings.temperature,
-        max_tokens: settings.maxTokens,
-        messages: [
-          { role: "system", content: settings.prompt },
-          { role: "user", content: text }
-        ]
-      }),
+      body: JSON.stringify((function () {
+        var body = {
+          model: settings.model,
+          temperature: settings.temperature,
+          max_tokens: settings.maxTokens,
+          messages: [
+            { role: "system", content: settings.prompt },
+            { role: "user", content: text }
+          ]
+        };
+        if (settings.noThink) body.reasoning_effort = "none";
+        return body;
+      })()),
       signal: controller.signal
     }).then(function (res) {
       return res.json().catch(function () { return {}; }).then(function (data) {
